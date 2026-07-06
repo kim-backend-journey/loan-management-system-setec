@@ -8,6 +8,8 @@ import org.springframework.http.HttpStatus;
 @RequiredArgsConstructor
 public enum ErrorCode {
 
+    ROLE_ALREADY_EXISTS("ROLE_ALREADY_EXISTS", "Role name already exists", HttpStatus.CONFLICT),
+
     // Auth errors
     INVALID_CREDENTIALS("INVALID_CREDENTIALS", "Invalid username or password", HttpStatus.UNAUTHORIZED),
     TOKEN_EXPIRED("TOKEN_EXPIRED", "Token has expired", HttpStatus.UNAUTHORIZED),
@@ -30,6 +32,8 @@ public enum ErrorCode {
     // General errors
     VALIDATION_FAILED("VALIDATION_FAILED", "Request validation failed", HttpStatus.BAD_REQUEST),
     INTERNAL_ERROR("INTERNAL_ERROR", "An unexpected error occurred", HttpStatus.INTERNAL_SERVER_ERROR);
+
+
 
     private final String code;
     private final String defaultReason;
