@@ -1,4 +1,4 @@
-package com.lms.auth.entity;
+package com.lms.auth.domain;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -74,5 +74,8 @@ public class User {
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
+    }
+    public String getRoleName() {
+        return role != null ? role.getRoleName() : null;
     }
 }
