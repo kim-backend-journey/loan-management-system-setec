@@ -18,6 +18,14 @@ public enum ErrorCode {
     // User errors
     USER_NOT_FOUND("USER_NOT_FOUND", "User not found", HttpStatus.NOT_FOUND),
     USER_ALREADY_EXISTS("USER_ALREADY_EXISTS", "Username or email already exists", HttpStatus.CONFLICT),
+    WRONG_PASSWORD("WRONG_PASSWORD", "Current password is incorrect", HttpStatus.BAD_REQUEST),
+    PASSWORD_MISMATCH("PASSWORD_MISMATCH", "New password and confirm password do not match", HttpStatus.BAD_REQUEST),
+    EMAIL_ALREADY_EXISTS("EMAIL_ALREADY_EXISTS", "Email already in use", HttpStatus.CONFLICT),
+    PHONE_ALREADY_EXISTS("PHONE_ALREADY_EXISTS", "Phone number already in use", HttpStatus.CONFLICT),
+    ACCOUNT_DISABLED("ACCOUNT_DISABLED", "Account is disabled", HttpStatus.FORBIDDEN),
+
+    // Role errors
+    ROLE_NOT_FOUND("ROLE_NOT_FOUND", "Role not found", HttpStatus.NOT_FOUND),
 
     // General errors
     VALIDATION_FAILED("VALIDATION_FAILED", "Request validation failed", HttpStatus.BAD_REQUEST),
