@@ -113,6 +113,7 @@ public class SecurityConfig {
 
                 String username = claims.getSubject();
                 String role = claims.get("role", String.class);
+                Integer userId = claims.get("userId", Integer.class); // ← ADD
 
                 if (username != null &&
                         SecurityContextHolder.getContext()
@@ -130,6 +131,8 @@ public class SecurityConfig {
                                     null,
                                     userDetails.getAuthorities()
                             );
+
+                    authToken.setDetails(userId); // ← ADD
 
                     SecurityContextHolder.getContext()
                             .setAuthentication(authToken);
