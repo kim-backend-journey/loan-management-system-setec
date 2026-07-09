@@ -8,6 +8,20 @@ import org.springframework.http.HttpStatus;
 @RequiredArgsConstructor
 public enum ErrorCode {
 
+    NOTIFICATION_NOT_FOUND("NOTIFICATION_NOT_FOUND", "Notification not found", HttpStatus.NOT_FOUND),
+
+    RISK_ASSESSMENT_NOT_FOUND("RISK_ASSESSMENT_NOT_FOUND", "Risk assessment not found", HttpStatus.NOT_FOUND),
+    LOAN_APPROVAL_NOT_FOUND("LOAN_APPROVAL_NOT_FOUND", "Loan approval not found", HttpStatus.NOT_FOUND),
+    APPLICATION_NOT_APPROVED("APPLICATION_NOT_APPROVED", "Application is not approved", HttpStatus.BAD_REQUEST),
+    LOAN_ALREADY_DISBURSED("LOAN_ALREADY_DISBURSED", "Loan already disbursed", HttpStatus.CONFLICT),
+    //LOAN_NOT_FOUND("LOAN_NOT_FOUND", "Loan not found", HttpStatus.NOT_FOUND),
+    //APPLICATION_NOT_FOUND("APPLICATION_NOT_FOUND", "Application not found", HttpStatus.NOT_FOUND),
+
+    DOCUMENT_NOT_FOUND("DOCUMENT_NOT_FOUND", "Document not found", HttpStatus.NOT_FOUND),
+    GUARANTOR_NOT_FOUND("GUARANTOR_NOT_FOUND", "Guarantor not found", HttpStatus.NOT_FOUND),
+    COLLATERAL_NOT_FOUND("COLLATERAL_NOT_FOUND", "Collateral not found", HttpStatus.NOT_FOUND),
+
+
     // Customer
     CUSTOMER_NOT_FOUND("CUSTOMER_NOT_FOUND", "Customer not found", HttpStatus.NOT_FOUND),
     CUSTOMER_ALREADY_EXISTS("CUSTOMER_ALREADY_EXISTS", "Customer already exists", HttpStatus.CONFLICT),
@@ -31,6 +45,7 @@ public enum ErrorCode {
     VALIDATION_FAILED("VALIDATION_FAILED", "Request validation failed", HttpStatus.BAD_REQUEST),
     INTERNAL_ERROR("INTERNAL_ERROR", "An unexpected error occurred", HttpStatus.INTERNAL_SERVER_ERROR),
     ACCESS_DENIED("ACCESS_DENIED", "You do not have permission", HttpStatus.FORBIDDEN);
+
 
     private final String code;
     private final String defaultReason;
