@@ -13,6 +13,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 
@@ -24,6 +25,7 @@ public class RiskAssessmentServiceImpl implements RiskAssessmentService {
     private final LoanApplicationRepository loanApplicationRepository;
 
     @Override
+    @Transactional
     public RiskAssessmentResponse createRiskAssessment(Integer applicationId, CreateRiskAssessmentRequest request) {
         LoanApplication application = loanApplicationRepository.findById(applicationId)
                 .orElseThrow(() -> new AppException(ErrorCode.APPLICATION_NOT_FOUND));
@@ -43,6 +45,7 @@ public class RiskAssessmentServiceImpl implements RiskAssessmentService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public RiskAssessmentResponse getRiskAssessment(Integer applicationId) {
         RiskAssessment assessment = riskAssessmentRepository.findByApplication_ApplicationId(applicationId)
                 .orElseThrow(() -> new AppException(ErrorCode.RISK_ASSESSMENT_NOT_FOUND));

@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
 
   postgres:
@@ -50,6 +48,8 @@ services:
       SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
       SPRING_PROFILES_ACTIVE: docker
+    volumes:
+      - ./uploads:/app/uploads
     depends_on:
       postgres:
         condition: service_healthy
@@ -87,6 +87,20 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+  gateway-service:
+    build:
+      context: .
+      dockerfile: gateway-service/Dockerfile
+    container_name: lms-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    depends_on:
+      - auth-service
+      - operation-service
+      - report-service
+      - cron-service
 
 volumes:
   postgres_data:

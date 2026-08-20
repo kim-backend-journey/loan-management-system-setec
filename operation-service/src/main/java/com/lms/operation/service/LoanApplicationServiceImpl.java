@@ -61,6 +61,7 @@ public class LoanApplicationServiceImpl implements LoanApplicationService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<ApplicationResponse> getAllApplications() {
         return loanApplicationRepository.findAll()
                 .stream()
@@ -69,6 +70,7 @@ public class LoanApplicationServiceImpl implements LoanApplicationService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ApplicationResponse getApplicationById(Integer id) {
         return toResponse(findApplication(id));
     }
@@ -140,6 +142,7 @@ public class LoanApplicationServiceImpl implements LoanApplicationService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<ApplicationStatusHistoryResponse> getApplicationHistory(Integer id) {
         findApplication(id);
         return statusHistoryRepository

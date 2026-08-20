@@ -14,12 +14,14 @@ public enum ErrorCode {
     LOAN_APPROVAL_NOT_FOUND("LOAN_APPROVAL_NOT_FOUND", "Loan approval not found", HttpStatus.NOT_FOUND),
     APPLICATION_NOT_APPROVED("APPLICATION_NOT_APPROVED", "Application is not approved", HttpStatus.BAD_REQUEST),
     LOAN_ALREADY_DISBURSED("LOAN_ALREADY_DISBURSED", "Loan already disbursed", HttpStatus.CONFLICT),
-    //LOAN_NOT_FOUND("LOAN_NOT_FOUND", "Loan not found", HttpStatus.NOT_FOUND),
-    //APPLICATION_NOT_FOUND("APPLICATION_NOT_FOUND", "Application not found", HttpStatus.NOT_FOUND),
 
     DOCUMENT_NOT_FOUND("DOCUMENT_NOT_FOUND", "Document not found", HttpStatus.NOT_FOUND),
     GUARANTOR_NOT_FOUND("GUARANTOR_NOT_FOUND", "Guarantor not found", HttpStatus.NOT_FOUND),
     COLLATERAL_NOT_FOUND("COLLATERAL_NOT_FOUND", "Collateral not found", HttpStatus.NOT_FOUND),
+
+    // File Storage
+    FILE_UPLOAD_FAILED("FILE_UPLOAD_FAILED", "Failed to store uploaded file", HttpStatus.INTERNAL_SERVER_ERROR),
+    FILE_NOT_FOUND("FILE_NOT_FOUND", "File not found", HttpStatus.NOT_FOUND),
 
 
     // Customer

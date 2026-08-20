@@ -30,6 +30,7 @@ public class LoanPaymentServiceImpl implements LoanPaymentService {
     private final PaymentTransactionRepository paymentTransactionRepository;
 
     @Override
+    @Transactional(readOnly = true)
     public List<LoanPaymentResponse> getPayments(Integer loanId) {
         return loanPaymentRepository.findByLoan_LoanId(loanId).stream()
                 .map(this::toResponse)
@@ -37,6 +38,7 @@ public class LoanPaymentServiceImpl implements LoanPaymentService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public LoanPaymentResponse getPayment(Integer loanId, Integer paymentId) {
         LoanPayment payment = loanPaymentRepository.findById(paymentId)
                 .orElseThrow(() -> new AppException(ErrorCode.PAYMENT_NOT_FOUND));

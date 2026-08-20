@@ -8,9 +8,11 @@ import com.lms.operation.service.DocumentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -29,6 +31,17 @@ public class DocumentController {
         DocumentResponse response = documentService.createDocument(applicationId, request);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success(response, "Document created successfully"));
+    }
+
+    @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasAnyRole('OFFICER', 'ADMIN')")
+    public ResponseEntity<ApiResponse<DocumentResponse>> uploadDocument(
+            @PathVariable("id") Integer applicationId,
+            @RequestParam("file") MultipartFile file,
+            @RequestParam("documentType") String documentType) {
+        DocumentResponse response = documentService.uploadDocument(applicationId, file, documentType);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success(response, "Document uploaded successfully"));
     }
 
     @GetMapping
