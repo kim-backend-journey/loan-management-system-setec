@@ -55,10 +55,4 @@ public class AuthController {
         return ResponseEntity.ok(
                 ApiResponse.success(null, "Logged out successfully"));
     }
-
-    @GetMapping("/hash")
-    public String generateHash() {
-        BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
-        return encoder.encode("admin123");
-    }
 }
