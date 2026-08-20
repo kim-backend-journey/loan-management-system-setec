@@ -15,7 +15,9 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -25,6 +27,7 @@ public class DocumentServiceImpl implements DocumentService {
 
     private final DocumentRepository documentRepository;
     private final LoanApplicationRepository loanApplicationRepository;
+    private final FileStorageService fileStorageService;
 
     @Override
     @Transactional
@@ -39,6 +42,32 @@ public class DocumentServiceImpl implements DocumentService {
         document.setOriginalFileName(request.getOriginalFileName());
         document.setMimeType(request.getMimeType());
         document.setFileSize(request.getFileSize());
+        document.setVerificationStatus("Pending");
+
+        Document saved = documentRepository.save(document);
+        return DocumentResponse.from(saved);
+    }
+
+    @Override
+    @Transactional
+    public DocumentResponse uploadDocument(Integer applicationId, MultipartFile file, String documentType) {
+        LoanApplication application = loanApplicationRepository.findById(applicationId)
+                .orElseThrow(() -> new AppException(ErrorCode.APPLICATION_NOT_FOUND));
+
+        String storedFileName;
+        try {
+            storedFileName = fileStorageService.saveFile(file);
+        } catch (IOException e) {
+            throw new AppException(ErrorCode.FILE_UPLOAD_FAILED);
+        }
+
+        Document document = new Document();
+        document.setApplication(application);
+        document.setDocumentType(documentType);
+        document.setFilePath(storedFileName);
+        document.setOriginalFileName(file.getOriginalFilename());
+        document.setMimeType(file.getContentType());
+        document.setFileSize(file.getSize());
         document.setVerificationStatus("Pending");
 
         Document saved = documentRepository.save(document);

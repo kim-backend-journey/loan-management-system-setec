@@ -32,7 +32,8 @@ public class OverduePaymentJob {
     /**
      * Job 1 — Mark Overdue Payments.
      * Runs daily at midnight.
-     */@Scheduled(cron = "0 0 0 * * ?")
+     */
+    @Scheduled(cron = "0 0 0 * * ?")
     @Transactional
     public void markOverduePayments() {
         LocalDate today = LocalDate.now();
