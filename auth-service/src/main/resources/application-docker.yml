@@ -30,7 +30,7 @@ logging:
     com.lms: DEBUG
 
 springdoc:
-  swagger-ui:
+  api-docs:
     servers:
       - url: "https://loan.cavkim.tech"
         description: "Production"
