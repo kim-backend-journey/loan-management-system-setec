@@ -1,28 +1,9 @@
--- ============================================================================
--- Loan Management System - Database Initialization Script
--- ============================================================================
--- This script is executed automatically by the PostgreSQL Docker image on
--- first container startup (via /docker-entrypoint-initdb.d/).
--- It is idempotent: safe to re-run against a database that already has
--- these objects (CREATE TABLE IF NOT EXISTS / ON CONFLICT DO NOTHING).
--- NOTE: Postgres only runs *initdb.d scripts when the data directory is
--- empty. See README section "Resetting the database" for details.
--- ============================================================================
-
-
--- ============================================================================
--- 1. roles
--- ============================================================================
 CREATE TABLE IF NOT EXISTS roles (
     role_id     SERIAL PRIMARY KEY,
     role_name   VARCHAR(50) UNIQUE NOT NULL,
     description TEXT
 );
 
-
--- ============================================================================
--- 2. users
--- ============================================================================
 CREATE TABLE IF NOT EXISTS users (
     user_id        SERIAL PRIMARY KEY,
     role_id        INT REFERENCES roles(role_id),
@@ -40,10 +21,6 @@ CREATE TABLE IF NOT EXISTS users (
     updated_at     TIMESTAMP DEFAULT NOW()
 );
 
-
--- ============================================================================
--- 3. refresh_tokens
--- ============================================================================
 CREATE TABLE IF NOT EXISTS refresh_tokens (
     refresh_token_id SERIAL PRIMARY KEY,
     user_id          INT NOT NULL REFERENCES users(user_id),
@@ -53,10 +30,6 @@ CREATE TABLE IF NOT EXISTS refresh_tokens (
     created_at       TIMESTAMP DEFAULT NOW()
 );
 
-
--- ============================================================================
--- 4. password_reset_tokens
--- ============================================================================
 CREATE TABLE IF NOT EXISTS password_reset_tokens (
     reset_token_id SERIAL PRIMARY KEY,
     user_id        INT NOT NULL REFERENCES users(user_id),
@@ -66,10 +39,6 @@ CREATE TABLE IF NOT EXISTS password_reset_tokens (
     created_at     TIMESTAMP DEFAULT NOW()
 );
 
-
--- ============================================================================
--- 5. login_history
--- ============================================================================
 CREATE TABLE IF NOT EXISTS login_history (
     login_history_id SERIAL PRIMARY KEY,
     user_id          INT NOT NULL REFERENCES users(user_id),
@@ -83,10 +52,6 @@ CREATE TABLE IF NOT EXISTS login_history (
     created_at       TIMESTAMP DEFAULT NOW()
 );
 
-
--- ============================================================================
--- 6. customers
--- ============================================================================
 CREATE TABLE IF NOT EXISTS customers (
     customer_id    SERIAL PRIMARY KEY,
     user_id        INT UNIQUE REFERENCES users(user_id),
@@ -104,10 +69,6 @@ CREATE TABLE IF NOT EXISTS customers (
     updated_at     TIMESTAMP DEFAULT NOW()
 );
 
-
--- ============================================================================
--- 7. employment_history
--- ============================================================================
 CREATE TABLE IF NOT EXISTS employment_history (
     employment_id  SERIAL PRIMARY KEY,
     customer_id    INT NOT NULL REFERENCES customers(customer_id),
@@ -122,9 +83,6 @@ CREATE TABLE IF NOT EXISTS employment_history (
 );
 
 
--- ============================================================================
--- 8. loan_products
--- ============================================================================
 CREATE TABLE IF NOT EXISTS loan_products (
     loan_product_id     SERIAL PRIMARY KEY,
     product_name        VARCHAR(255) NOT NULL,
@@ -142,10 +100,6 @@ CREATE TABLE IF NOT EXISTS loan_products (
     updated_at          TIMESTAMP DEFAULT NOW()
 );
 
-
--- ============================================================================
--- 9. loan_applications
--- ============================================================================
 CREATE TABLE IF NOT EXISTS loan_applications (
     application_id        SERIAL PRIMARY KEY,
     application_number    VARCHAR(50) UNIQUE NOT NULL,
@@ -161,9 +115,6 @@ CREATE TABLE IF NOT EXISTS loan_applications (
 );
 
 
--- ============================================================================
--- 10. documents
--- ============================================================================
 CREATE TABLE IF NOT EXISTS documents (
     document_id         SERIAL PRIMARY KEY,
     application_id      INT NOT NULL REFERENCES loan_applications(application_id),
@@ -181,9 +132,6 @@ CREATE TABLE IF NOT EXISTS documents (
 );
 
 
--- ============================================================================
--- 11. risk_assessments
--- ============================================================================
 CREATE TABLE IF NOT EXISTS risk_assessments (
     assessment_id      SERIAL PRIMARY KEY,
     application_id     INT NOT NULL REFERENCES loan_applications(application_id),
@@ -198,9 +146,6 @@ CREATE TABLE IF NOT EXISTS risk_assessments (
 );
 
 
--- ============================================================================
--- 12. guarantors
--- ============================================================================
 CREATE TABLE IF NOT EXISTS guarantors (
     guarantor_id             SERIAL PRIMARY KEY,
     application_id           INT NOT NULL REFERENCES loan_applications(application_id),
@@ -222,10 +167,6 @@ CREATE TABLE IF NOT EXISTS guarantors (
     updated_at                TIMESTAMP DEFAULT NOW()
 );
 
-
--- ============================================================================
--- 13. collaterals
--- ============================================================================
 CREATE TABLE IF NOT EXISTS collaterals (
     collateral_id       SERIAL PRIMARY KEY,
     application_id      INT NOT NULL REFERENCES loan_applications(application_id),
@@ -241,10 +182,6 @@ CREATE TABLE IF NOT EXISTS collaterals (
     updated_at          TIMESTAMP DEFAULT NOW()
 );
 
-
--- ============================================================================
--- 14. loan_approvals
--- ============================================================================
 CREATE TABLE IF NOT EXISTS loan_approvals (
     approval_id      SERIAL PRIMARY KEY,
     application_id   INT NOT NULL REFERENCES loan_applications(application_id),
@@ -257,9 +194,6 @@ CREATE TABLE IF NOT EXISTS loan_approvals (
 );
 
 
--- ============================================================================
--- 15. loans
--- ============================================================================
 CREATE TABLE IF NOT EXISTS loans (
     loan_id             SERIAL PRIMARY KEY,
     application_id      INT UNIQUE NOT NULL REFERENCES loan_applications(application_id),
@@ -276,10 +210,6 @@ CREATE TABLE IF NOT EXISTS loans (
     updated_at          TIMESTAMP DEFAULT NOW()
 );
 
-
--- ============================================================================
--- 16. loan_payments
--- ============================================================================
 CREATE TABLE IF NOT EXISTS loan_payments (
     payment_id        SERIAL PRIMARY KEY,
     loan_id           INT NOT NULL REFERENCES loans(loan_id),
@@ -297,10 +227,6 @@ CREATE TABLE IF NOT EXISTS loan_payments (
     updated_at        TIMESTAMP DEFAULT NOW()
 );
 
-
--- ============================================================================
--- 17. payment_transactions
--- ============================================================================
 CREATE TABLE IF NOT EXISTS payment_transactions (
     transaction_id     SERIAL PRIMARY KEY,
     payment_id         INT NOT NULL REFERENCES loan_payments(payment_id),
@@ -314,10 +240,6 @@ CREATE TABLE IF NOT EXISTS payment_transactions (
     updated_at         TIMESTAMP DEFAULT NOW()
 );
 
-
--- ============================================================================
--- 18. notifications
--- ============================================================================
 CREATE TABLE IF NOT EXISTS notifications (
     notification_id     SERIAL PRIMARY KEY,
     customer_id         INT NOT NULL REFERENCES customers(customer_id),
@@ -334,10 +256,6 @@ CREATE TABLE IF NOT EXISTS notifications (
     updated_at           TIMESTAMP DEFAULT NOW()
 );
 
-
--- ============================================================================
--- 19. application_status_history
--- ============================================================================
 CREATE TABLE IF NOT EXISTS application_status_history (
     history_id     SERIAL PRIMARY KEY,
     application_id INT NOT NULL REFERENCES loan_applications(application_id),
@@ -349,10 +267,6 @@ CREATE TABLE IF NOT EXISTS application_status_history (
     updated_at     TIMESTAMP DEFAULT NOW()
 );
 
-
--- ============================================================================
--- Indexes
--- ============================================================================
 CREATE INDEX IF NOT EXISTS idx_users_email            ON users(email);
 CREATE INDEX IF NOT EXISTS idx_users_phone            ON users(phone_number);
 CREATE INDEX IF NOT EXISTS idx_users_username         ON users(username);
@@ -378,9 +292,6 @@ CREATE INDEX IF NOT EXISTS idx_notifications_customer ON notifications(customer_
 CREATE INDEX IF NOT EXISTS idx_notifications_read     ON notifications(is_read);
 
 
--- ============================================================================
--- Seed Data
--- ============================================================================
 
 -- Roles
 INSERT INTO roles (role_name, description) VALUES
