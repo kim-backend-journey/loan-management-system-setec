@@ -55,5 +55,10 @@ springdoc:
         url: /operation-docs/v3/api-docs
       - name: Report Service
         url: /report-docs/v3/api-docs
+    servers:
+      - url: "https://loan.cavkim.tech"
+        description: "Production"
+      - url: "http://localhost:8080"
+        description: "Local Development"
   api-docs:
     enabled: true
