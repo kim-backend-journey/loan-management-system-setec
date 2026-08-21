@@ -19,6 +19,24 @@ spring:
           uri: http://localhost:8083
           predicates:
             - Path=/api/v1/reports/**
+        - id: auth-service-docs
+          uri: http://localhost:8081
+          predicates:
+            - Path=/auth-docs/**
+          filters:
+            - RewritePath=/auth-docs/(?<segment>.*), /$\{segment}
+        - id: operation-service-docs
+          uri: http://localhost:8082
+          predicates:
+            - Path=/operation-docs/**
+          filters:
+            - RewritePath=/operation-docs/(?<segment>.*), /$\{segment}
+        - id: report-service-docs
+          uri: http://localhost:8083
+          predicates:
+            - Path=/report-docs/**
+          filters:
+            - RewritePath=/report-docs/(?<segment>.*), /$\{segment}
       globalcors:
         corsConfigurations:
           '[/**]':
@@ -26,3 +44,16 @@ spring:
             allowedMethods: "*"
             allowedHeaders: "*"
             allowCredentials: true
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    urls:
+      - name: Auth Service
+        url: /auth-docs/v3/api-docs
+      - name: Operation Service
+        url: /operation-docs/v3/api-docs
+      - name: Report Service
+        url: /report-docs/v3/api-docs
+  api-docs:
+    enabled: true

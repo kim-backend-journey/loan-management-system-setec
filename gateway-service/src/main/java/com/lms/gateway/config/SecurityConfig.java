@@ -22,6 +22,16 @@ public class SecurityConfig {
                 .httpBasic(ServerHttpSecurity.HttpBasicSpec::disable)
                 .formLogin(ServerHttpSecurity.FormLoginSpec::disable)
                 .authorizeExchange(exchanges -> exchanges
+                        .pathMatchers(
+                                "/api/v1/auth/**",
+                                "/swagger-ui/**",
+                                "/swagger-ui.html",
+                                "/v3/api-docs/**",
+                                "/webjars/**",
+                                "/auth-docs/**",
+                                "/operation-docs/**",
+                                "/report-docs/**"
+                        ).permitAll()
                         .anyExchange().permitAll()
                 )
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
