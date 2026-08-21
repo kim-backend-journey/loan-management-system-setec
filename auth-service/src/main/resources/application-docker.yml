@@ -28,3 +28,11 @@ jwt:
 logging:
   level:
     com.lms: DEBUG
+
+springdoc:
+  swagger-ui:
+    servers:
+      - url: "https://loan.cavkim.tech"
+        description: "Production"
+      - url: "http://localhost:8080"
+        description: "Local"
