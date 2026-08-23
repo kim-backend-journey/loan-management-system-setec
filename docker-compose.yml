@@ -111,7 +111,8 @@ services:
     volumes:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
       - prometheus_data:/prometheus
-    networks: default
+    networks:
+      - default
     depends_on:
       - auth-service
       - operation-service
