@@ -1,0 +1,51 @@
+name: Deploy LMS to Google Cloud
+
+on:
+  push:
+    branches: [ main, staging ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Determine Environment
+        id: env
+        run: |
+          if [ "${{ github.ref }}" = "refs/heads/main" ]; then
+            echo "ENVIRONMENT=production" >> $GITHUB_OUTPUT
+            echo "COMPOSE_FILE=docker-compose.yml" >> $GITHUB_OUTPUT
+          else
+            echo "ENVIRONMENT=staging" >> $GITHUB_OUTPUT
+            echo "COMPOSE_FILE=docker-compose.staging.yml" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Deploy to Google Cloud VM
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VM_IP }}
+          username: ${{ secrets.VM_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd /home/eath/loan-management-system-setec
+            git pull origin ${{ github.ref_name }}
+            docker compose -f ${{ steps.env.outputs.COMPOSE_FILE }} down
+            docker compose -f ${{ steps.env.outputs.COMPOSE_FILE }} up --build -d
+
+      - name: Notify Telegram — Success
+        if: success()
+        run: |
+          curl -X POST https://api.telegram.org/bot${{ secrets.TELEGRAM_TOKEN }}/sendMessage \
+            -d "chat_id=${{ secrets.TELEGRAM_CHAT_ID }}" \
+            -d "message_thread_id=${{ secrets.TELEGRAM_THREAD_ID }}" \
+            -d "text=✅ LMS ${{ steps.env.outputs.ENVIRONMENT }} Deployed Successfully!%0A%0ABranch: ${{ github.ref_name }}%0ACommit: ${{ github.event.head_commit.message }}%0AAuthor: ${{ github.actor }}%0A%0A${{ steps.env.outputs.ENVIRONMENT == 'production' && 'API: https://loan.cavkim.tech' || 'API: https://staging.cavkim.tech' }}"
+
+      - name: Notify Telegram — Failed
+        if: failure()
+        run: |
+          curl -X POST https://api.telegram.org/bot${{ secrets.TELEGRAM_TOKEN }}/sendMessage \
+            -d "chat_id=${{ secrets.TELEGRAM_CHAT_ID }}" \
+            -d "message_thread_id=${{ secrets.TELEGRAM_THREAD_ID }}" \
+            -d "text=❌ LMS ${{ steps.env.outputs.ENVIRONMENT }} Deploy FAILED!%0A%0ABranch: ${{ github.ref_name }}%0ACommit: ${{ github.event.head_commit.message }}%0AAuthor: ${{ github.actor }}%0A%0ACheck: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
