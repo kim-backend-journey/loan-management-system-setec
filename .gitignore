@@ -5,3 +5,7 @@ target/
 *.iml
 .env
 application-local.yml
+uploads/
+uploads-staging/
+prometheus_data/
+prometheus_data_staging/
