@@ -30,7 +30,8 @@ public class SecurityConfig {
                                 "/webjars/**",
                                 "/auth-docs/**",
                                 "/operation-docs/**",
-                                "/report-docs/**"
+                                "/report-docs/**",
+                                "/actuator/**"
                         ).permitAll()
                         .anyExchange().permitAll()
                 )
