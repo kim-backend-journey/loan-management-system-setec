@@ -4,6 +4,8 @@ import com.lms.operation.domain.Customer;
 import com.lms.operation.domain.LoanProduct;
 import com.lms.operation.domain.LoanRequest;
 import com.lms.operation.dto.request.CreateLoanRequestRequest;
+import com.lms.operation.dto.request.LoanRequestDecisionRequest;
+import com.lms.operation.dto.response.LoanRequestDecisionResponse;
 import com.lms.operation.dto.response.LoanRequestResponse;
 import com.lms.operation.exception.AppException;
 import com.lms.operation.exception.ErrorCode;
@@ -18,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Slf4j
 @Service
@@ -87,6 +90,53 @@ public class LoanRequestServiceImpl implements LoanRequestService {
         return toResponse(loanRequest);
     }
 
+    @Override
+    @Transactional
+    public LoanRequestDecisionResponse decideRequest(Integer loanRequestId,
+                                                     LoanRequestDecisionRequest request) {
+
+        LoanRequest loanRequest = loanRequestRepository.findById(loanRequestId)
+                .orElseThrow(() -> new AppException(ErrorCode.LOAN_REQUEST_NOT_FOUND));
+
+        // Decision must be exactly APPROVE or REJECT
+        String decision = request.getDecision() == null ? "" : request.getDecision().trim();
+        boolean approve = "APPROVE".equals(decision);
+        boolean reject = "REJECT".equals(decision);
+        if (!approve && !reject) {
+            throw new AppException(ErrorCode.VALIDATION_FAILED,
+                    "Decision must be APPROVE or REJECT");
+        }
+
+        // Comment is required when rejecting
+        if (reject && (request.getComment() == null || request.getComment().isBlank())) {
+            throw new AppException(ErrorCode.VALIDATION_FAILED,
+                    "Comment is required when rejecting a loan request");
+        }
+
+        // Only PENDING or IN_REVIEW requests can be decided
+        String status = loanRequest.getStatus();
+        if (!"PENDING".equals(status) && !"IN_REVIEW".equals(status)) {
+            throw new AppException(ErrorCode.LOAN_REQUEST_ALREADY_DECIDED);
+        }
+
+        // Approver cannot be the creator
+        Integer reviewedBy = getCurrentUserId();
+        if (reviewedBy != null && reviewedBy.equals(loanRequest.getCreatedBy())) {
+            throw new AppException(ErrorCode.ACCESS_DENIED,
+                    "Approver cannot be the creator of the loan request");
+        }
+
+        loanRequest.setReviewedBy(reviewedBy);
+        loanRequest.setReviewedAt(LocalDateTime.now());
+        loanRequest.setReviewComment(request.getComment());
+        loanRequest.setStatus(approve ? "APPROVED" : "REJECTED");
+
+        loanRequestRepository.save(loanRequest);
+        log.info("Loan request {} decided: {} by user {}",
+                loanRequest.getLoanRequestNumber(), loanRequest.getStatus(), reviewedBy);
+        return toDecisionResponse(loanRequest);
+    }
+
     private String generateLoanRequestNumber() {
         return "LR-" + LocalDate.now().getYear() + "-"
                 + String.format("%04d", System.currentTimeMillis() % 10000);
@@ -130,6 +180,24 @@ public class LoanRequestServiceImpl implements LoanRequestService {
                 r.getStatus(),
                 r.getCreatedBy(),
                 r.getCreatedAt()
+        );
+    }
+
+    private LoanRequestDecisionResponse toDecisionResponse(LoanRequest r) {
+        String customerName = r.getCustomer().getFirstName()
+                + " " + r.getCustomer().getLastName();
+
+        return new LoanRequestDecisionResponse(
+                r.getLoanRequestId(),
+                r.getLoanRequestNumber(),
+                r.getStatus(),
+                r.getReviewedBy(),
+                r.getReviewedAt(),
+                r.getReviewComment(),
+                r.getCustomer().getCustomerId(),
+                customerName,
+                r.getPrincipalAmount(),
+                r.getCurrency()
         );
     }
 }

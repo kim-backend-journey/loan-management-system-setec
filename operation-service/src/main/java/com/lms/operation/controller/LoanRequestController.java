@@ -2,6 +2,8 @@ package com.lms.operation.controller;
 
 import com.lms.common.response.ApiResponse;
 import com.lms.operation.dto.request.CreateLoanRequestRequest;
+import com.lms.operation.dto.request.LoanRequestDecisionRequest;
+import com.lms.operation.dto.response.LoanRequestDecisionResponse;
 import com.lms.operation.dto.response.LoanRequestResponse;
 import com.lms.operation.service.LoanRequestService;
 import jakarta.validation.Valid;
@@ -30,5 +32,18 @@ public class LoanRequestController {
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(ApiResponse.success(response, "Loan request created successfully"));
+    }
+
+    @PostMapping("/{loanRequestId}/decision")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<LoanRequestDecisionResponse>> decideLoanRequest(
+            @PathVariable Integer loanRequestId,
+            @Valid @RequestBody LoanRequestDecisionRequest request) {
+
+        LoanRequestDecisionResponse response =
+                loanRequestService.decideRequest(loanRequestId, request);
+
+        return ResponseEntity
+                .ok(ApiResponse.success(response, "Loan request decision recorded successfully"));
     }
 }
