@@ -43,6 +43,32 @@ public class PaymentTransaction {
     @Column(name = "transaction_date")
     private LocalDateTime transactionDate;
 
+    // --- enhanced repayment columns ---
+    @Column(name = "bank_account_id")
+    private Integer bankAccountId;
+
+    @Column(name = "bank_reference", unique = true, length = 100)
+    private String bankReference;
+
+    @Column(name = "bank_verification_status", length = 20)
+    private String bankVerificationStatus;
+
+    @Column(name = "idempotency_key", unique = true, length = 100)
+    private String idempotencyKey;
+
+    @Column(name = "receipt_number", length = 50)
+    private String receiptNumber;
+
+    @Column(name = "currency", length = 10)
+    private String currency;
+
+    @Column(name = "notes", columnDefinition = "TEXT")
+    private String notes;
+
+    @Column(name = "is_voided")
+    @Builder.Default
+    private Boolean isVoided = false;
+
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
