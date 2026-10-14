@@ -22,7 +22,7 @@ public class Loan {
     private Integer loanId;
 
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "application_id", unique = true, nullable = false)
+    @JoinColumn(name = "application_id", unique = true)
     private LoanApplication application;
 
     @Column(name = "loan_number", unique = true, nullable = false, length = 50)
@@ -52,6 +52,25 @@ public class Loan {
 
     @Column(name = "end_date")
     private LocalDate endDate;
+
+    // --- loan-request based disbursement fields ---
+    @Column(name = "loan_request_id")
+    private Integer loanRequestId;
+
+    @Column(name = "employee_id")
+    private Integer employeeId;
+
+    @Column(name = "branch_id")
+    private Integer branchId;
+
+    @Column(name = "currency", length = 10)
+    private String currency;
+
+    @Column(name = "service_fee_amount", precision = 15, scale = 2)
+    private BigDecimal serviceFeeAmount;
+
+    @Column(name = "repayment_frequency", length = 20)
+    private String repaymentFrequency;
 
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;

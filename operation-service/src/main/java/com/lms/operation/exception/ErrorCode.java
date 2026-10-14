@@ -36,6 +36,18 @@ public enum ErrorCode {
     INVALID_APPLICATION_STATUS("INVALID_APPLICATION_STATUS", "Invalid application status transition", HttpStatus.BAD_REQUEST),
     APPLICATION_AMOUNT_EXCEEDS_LIMIT("APPLICATION_AMOUNT_EXCEEDS_LIMIT", "Requested amount exceeds product limit", HttpStatus.BAD_REQUEST),
 
+    // Loan Request
+    LOAN_REQUEST_NOT_FOUND("LOAN_REQUEST_NOT_FOUND", "Loan request not found", HttpStatus.NOT_FOUND),
+    LOAN_REQUEST_ALREADY_DECIDED("LOAN_REQUEST_ALREADY_DECIDED", "Loan request already has a final decision", HttpStatus.CONFLICT),
+    LOAN_REQUEST_NOT_APPROVED("LOAN_REQUEST_NOT_APPROVED", "Loan request is not approved", HttpStatus.BAD_REQUEST),
+
+    // Employee
+    EMPLOYEE_NOT_FOUND("EMPLOYEE_NOT_FOUND", "Employee not found", HttpStatus.NOT_FOUND),
+
+    // Disbursement / Idempotency
+    BANK_REFERENCE_DUPLICATE("BANK_REFERENCE_DUPLICATE", "Bank reference already exists", HttpStatus.CONFLICT),
+    IDEMPOTENCY_KEY_DUPLICATE("IDEMPOTENCY_KEY_DUPLICATE", "Duplicate request", HttpStatus.CONFLICT),
+
     // Loan
     LOAN_NOT_FOUND("LOAN_NOT_FOUND", "Loan not found", HttpStatus.NOT_FOUND),
 
