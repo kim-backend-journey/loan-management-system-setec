@@ -17,5 +17,8 @@ public interface CollectionService {
 
     DailyClosingResponse closeDay(Integer employeeId, CloseDayRequest request);
 
+    /** Corrects the counted cash (and notes) of an already closed day; the ledger figures stay as closed. */
+    DailyClosingResponse updateDayClosing(Integer employeeId, CloseDayRequest request);
+
     DailyClosingResponse getDayClosing(Integer employeeId, LocalDate date);
 }

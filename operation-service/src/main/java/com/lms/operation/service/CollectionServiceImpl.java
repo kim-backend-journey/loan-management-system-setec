@@ -150,6 +150,48 @@ public class CollectionServiceImpl implements CollectionService {
     }
 
     @Override
+    @Transactional
+    public DailyClosingResponse updateDayClosing(Integer employeeId, CloseDayRequest request) {
+
+        Employee employee = employeeRepository.findById(employeeId)
+                .orElseThrow(() -> new AppException(ErrorCode.EMPLOYEE_NOT_FOUND));
+
+        // Officers correct only their own count; admins anyone's
+        if (!currentUser.isAdmin()
+                && (employee.getUserId() == null || !employee.getUserId().equals(currentUser.userId()))) {
+            throw new AppException(ErrorCode.ACCESS_DENIED);
+        }
+
+        DailyClosing closing = dailyClosingRepository
+                .findByEmployeeIdAndBusinessDate(employeeId, request.getBusinessDate())
+                .orElseThrow(() -> new AppException(ErrorCode.DAY_CLOSING_NOT_FOUND));
+
+        // Same rule as closing: a count that differs from the ledger needs an explanation
+        BigDecimal cashVariance = request.getCashCounted().subtract(closing.getCashExpected());
+        if (cashVariance.signum() != 0
+                && (request.getNotes() == null || request.getNotes().isBlank())) {
+            throw new AppException(ErrorCode.VALIDATION_FAILED,
+                    "Notes are required when counted cash does not match the ledger (variance "
+                            + cashVariance.toPlainString() + ")");
+        }
+
+        // cashExpected, bank totals, transaction count and grand total come from the ledger as it was
+        // closed; no payment can be added to a closed day, so they stay. closedBy/closedAt keep the
+        // original close; updatedAt records the correction.
+        closing.setCashCounted(request.getCashCounted());
+        closing.setCashVariance(cashVariance);
+        closing.setNotes(request.getNotes());
+        dailyClosingRepository.save(closing);
+
+        log.info("Day closing corrected: employee={} date={} countedCash={} variance={} by user={}",
+                employeeId, request.getBusinessDate(), request.getCashCounted(), cashVariance,
+                getCurrentUserId());
+
+        return toClosingResponse(closing, new EmployeeSummaryResponse(
+                employee.getEmployeeId(), resolveEmployeeName(employee)));
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public DailyClosingResponse getDayClosing(Integer employeeId, LocalDate date) {
 

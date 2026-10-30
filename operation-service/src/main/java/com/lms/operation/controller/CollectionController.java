@@ -63,6 +63,17 @@ public class CollectionController {
                 .body(ApiResponse.success(response, "Business day closed"));
     }
 
+    // Corrects the banknote count of a closed day; same body as closing it
+    @PutMapping("/daily/employees/{employeeId}/close")
+    @PreAuthorize("hasAnyRole('OFFICER','ADMIN')")
+    public ResponseEntity<ApiResponse<DailyClosingResponse>> updateDayClosing(
+            @PathVariable Integer employeeId,
+            @Valid @RequestBody CloseDayRequest request) {
+
+        return ResponseEntity.ok(ApiResponse.success(
+                collectionService.updateDayClosing(employeeId, request), "Day closing updated"));
+    }
+
     @GetMapping("/daily/employees/{employeeId}/close")
     @PreAuthorize("hasAnyRole('OFFICER','ADMIN')")
     public ResponseEntity<ApiResponse<DailyClosingResponse>> getDayClosing(
