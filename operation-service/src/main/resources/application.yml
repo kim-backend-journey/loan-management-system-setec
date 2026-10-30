@@ -11,6 +11,12 @@ spring:
     password: your_password_here
     driver-class-name: org.postgresql.Driver
 
+  # Brings an existing database up to the current schema on every start (statements are re-runnable)
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:db/upgrade.sql
+
   jpa:
     hibernate:
       ddl-auto: none

@@ -1,11 +1,15 @@
 package com.lms.operation.service;
 
+import com.lms.operation.domain.ApplicationStatusHistory;
+import com.lms.operation.domain.Employee;
 import com.lms.operation.domain.Loan;
 import com.lms.operation.domain.LoanApplication;
 import com.lms.operation.domain.LoanPayment;
 import com.lms.operation.dto.response.LoanResponse;
 import com.lms.operation.exception.AppException;
 import com.lms.operation.exception.ErrorCode;
+import com.lms.operation.repository.ApplicationStatusHistoryRepository;
+import com.lms.operation.repository.EmployeeRepository;
 import com.lms.operation.repository.LoanApplicationRepository;
 import com.lms.operation.repository.LoanPaymentRepository;
 import com.lms.operation.repository.LoanRepository;
@@ -26,12 +30,23 @@ public class LoanServiceImpl implements LoanService {
     private final LoanRepository loanRepository;
     private final LoanPaymentRepository loanPaymentRepository;
     private final LoanApplicationRepository loanApplicationRepository;
+    private final EmployeeRepository employeeRepository;
+    private final ApplicationStatusHistoryRepository statusHistoryRepository;
+    private final CurrentUserService currentUser;
 
     @Override
     @Transactional
-    public LoanResponse disburse(Integer applicationId) {
+    public LoanResponse disburse(Integer applicationId, Integer employeeId) {
         LoanApplication application = loanApplicationRepository.findById(applicationId)
                 .orElseThrow(() -> new AppException(ErrorCode.APPLICATION_NOT_FOUND));
+
+        // Every loan needs its loan officer: due lists, collections and reports are all per officer
+        Employee officer = employeeId != null
+                ? employeeRepository.findById(employeeId)
+                        .orElseThrow(() -> new AppException(ErrorCode.EMPLOYEE_NOT_FOUND))
+                : currentUser.employee()
+                        .orElseThrow(() -> new AppException(ErrorCode.VALIDATION_FAILED,
+                                "Choose the loan officer for this loan"));
 
         // Already disbursed?
         loanRepository.findByApplication_ApplicationId(applicationId).ifPresent(l -> {
@@ -70,6 +85,9 @@ public class LoanServiceImpl implements LoanService {
         loan.setMonthlyPayment(monthlyPayment);
         loan.setOutstandingBalance(approvedAmount);
         loan.setLoanStatus("ACTIVE");
+        loan.setCurrency("USD"); // the business lends and collects in US dollars only
+        loan.setEmployeeId(officer.getEmployeeId());
+        loan.setBranchId(officer.getBranchId());
         loan.setStartDate(startDate);
         loan.setEndDate(startDate.plusMonths(n));
         loan = loanRepository.save(loan);
@@ -109,13 +127,22 @@ public class LoanServiceImpl implements LoanService {
         }
         loanPaymentRepository.saveAll(payments);
 
+        String oldStatus = application.getApplicationStatus();
         application.setApplicationStatus("Disbursed");
         loanApplicationRepository.save(application);
+        statusHistoryRepository.save(ApplicationStatusHistory.builder()
+                .application(application)
+                .changedBy(currentUser.userId() != null ? currentUser.userId() : officer.getUserId())
+                .oldStatus(oldStatus)
+                .newStatus("Disbursed")
+                .remark("Disbursed as " + loan.getLoanNumber() + " to employee " + officer.getEmployeeId())
+                .build());
 
         return toResponse(loan);
     }
 
     @Override
+    @Transactional(readOnly = true) // toResponse reads the lazy application
     public LoanResponse getLoan(Integer loanId) {
         Loan loan = loanRepository.findById(loanId)
                 .orElseThrow(() -> new AppException(ErrorCode.LOAN_NOT_FOUND));
@@ -125,7 +152,7 @@ public class LoanServiceImpl implements LoanService {
     private LoanResponse toResponse(Loan l) {
         return new LoanResponse(
                 l.getLoanId(),
-                l.getApplication().getApplicationId(),
+                l.getApplication() == null ? null : l.getApplication().getApplicationId(),
                 l.getLoanNumber(),
                 l.getApprovedAmount(),
                 l.getInterestRate(),
@@ -136,7 +163,10 @@ public class LoanServiceImpl implements LoanService {
                 l.getStartDate(),
                 l.getEndDate(),
                 l.getCreatedAt(),
-                l.getUpdatedAt()
+                l.getUpdatedAt(),
+                l.getEmployeeId(),
+                l.getBranchId(),
+                l.getCurrency()
         );
     }
 }

@@ -11,6 +11,7 @@ import com.lms.operation.dto.response.RepaymentResponse;
 import com.lms.operation.exception.AppException;
 import com.lms.operation.exception.ErrorCode;
 import com.lms.operation.repository.CollectionLedgerRepository;
+import com.lms.operation.repository.DailyClosingRepository;
 import com.lms.operation.repository.EmployeeRepository;
 import com.lms.operation.repository.LoanPaymentRepository;
 import com.lms.operation.repository.LoanRepository;
@@ -39,6 +40,7 @@ public class RepaymentServiceImpl implements RepaymentService {
     private final LoanRepository loanRepository;
     private final PaymentTransactionRepository paymentTransactionRepository;
     private final CollectionLedgerRepository collectionLedgerRepository;
+    private final DailyClosingRepository dailyClosingRepository;
     private final EmployeeRepository employeeRepository;
 
     @Override
@@ -77,6 +79,11 @@ public class RepaymentServiceImpl implements RepaymentService {
             throw new AppException(ErrorCode.VALIDATION_FAILED,
                     "Payment method must be CASH or BANK_TRANSFER");
         }
+        // The business collects in US dollars only
+        if (request.getCurrency() != null && !"USD".equalsIgnoreCase(request.getCurrency().trim())) {
+            throw new AppException(ErrorCode.VALIDATION_FAILED, "Currency must be USD");
+        }
+        request.setCurrency("USD");
         if (bankTransfer) {
             if (request.getBankReference() == null || request.getBankReference().isBlank()) {
                 throw new AppException(ErrorCode.VALIDATION_FAILED,
@@ -96,11 +103,25 @@ public class RepaymentServiceImpl implements RepaymentService {
             throw new AppException(ErrorCode.IDEMPOTENCY_KEY_DUPLICATE);
         }
 
-        // 3. Allocation: Penalty -> ServiceFee -> Interest -> Principal
+        // A closed business day accepts no more collections for that officer
+        Employee employee = resolveEmployee(request.getReceivedByEmployeeId());
+        Integer ledgerEmployeeId = employee != null
+                ? employee.getEmployeeId() : request.getReceivedByEmployeeId();
+        LocalDate businessDate = request.getPaidAt().toLocalDate();
+        if (ledgerEmployeeId != null
+                && dailyClosingRepository.existsByEmployeeIdAndBusinessDate(ledgerEmployeeId, businessDate)) {
+            throw new AppException(ErrorCode.DAY_ALREADY_CLOSED,
+                    "Business day " + businessDate + " is already closed for this employee");
+        }
+
+        // 3. Allocation: Penalty -> ServiceFee -> Interest -> Principal. An installment can be paid in
+        //    several parts, so penalty and interest only take what earlier parts have not already covered.
         BigDecimal totalAmount = request.getTotalAmount();
 
-        BigDecimal penalty = nz(payment.getPenaltyAmount());
-        BigDecimal penaltyAllocation = totalAmount.min(penalty);
+        BigDecimal penaltyUnpaid = nz(payment.getPenaltyAmount())
+                .subtract(nz(collectionLedgerRepository.sumPenaltyCollected(payment.getPaymentId())))
+                .max(BigDecimal.ZERO);
+        BigDecimal penaltyAllocation = totalAmount.min(penaltyUnpaid);
         BigDecimal remaining = totalAmount.subtract(penaltyAllocation);
 
         // LoanPayment has no per-schedule service fee -> allocation is 0
@@ -109,16 +130,24 @@ public class RepaymentServiceImpl implements RepaymentService {
 
         BigDecimal interestRate = nz(loan.getInterestRate());
         BigDecimal monthlyRate = interestRate.divide(BigDecimal.valueOf(1200), 10, RoundingMode.HALF_UP);
-        BigDecimal interestAllocation = nz(payment.getAmountDue())
+        BigDecimal installmentInterest = nz(payment.getAmountDue())
                 .multiply(monthlyRate)
                 .setScale(2, RoundingMode.HALF_UP);
-        // never allocate more interest than what is left
-        interestAllocation = interestAllocation.min(remaining);
+        BigDecimal interestUnpaid = installmentInterest
+                .subtract(nz(collectionLedgerRepository.sumInterestCollected(payment.getPaymentId())))
+                .max(BigDecimal.ZERO);
+        // never allocate more interest than what is still owed on this installment, or than is left
+        BigDecimal interestAllocation = interestUnpaid.min(remaining);
         BigDecimal principalAllocation = remaining.subtract(interestAllocation);
 
-        // 4. Update the schedule
-        boolean fullyPaid = totalAmount.compareTo(nz(payment.getAmountDue())) >= 0;
-        payment.setAmountPaid(totalAmount);
+        // 4. Update the schedule. Partial payments add up; the installment is Paid once everything
+        //    owed on it (amount due + penalty + late fee) has been received across all payments.
+        BigDecimal paidSoFar = nz(payment.getAmountPaid()).add(totalAmount);
+        BigDecimal totalOwed = nz(payment.getAmountDue())
+                .add(nz(payment.getPenaltyAmount()))
+                .add(nz(payment.getLateFee()));
+        boolean fullyPaid = paidSoFar.compareTo(totalOwed) >= 0;
+        payment.setAmountPaid(paidSoFar);
         payment.setPaymentDate(request.getPaidAt());
         payment.setPaymentStatus(fullyPaid ? "Paid" : "Partial");
         payment.setPaidBy("Cashier");
@@ -145,7 +174,9 @@ public class RepaymentServiceImpl implements RepaymentService {
                 .bankAccountId(request.getBankAccountId())
                 .bankVerificationStatus(bankVerificationStatus)
                 .transactionStatus("Success")
-                .receivedBy(getCurrentUserId())
+                // the person who took the money, so GET /collections/daily/payments lists it under them
+                .receivedBy(employee != null && employee.getUserId() != null
+                        ? employee.getUserId() : getCurrentUserId())
                 .transactionDate(request.getPaidAt())
                 .idempotencyKey(request.getIdempotencyKey())
                 .receiptNumber(receiptNumber)
@@ -156,15 +187,12 @@ public class RepaymentServiceImpl implements RepaymentService {
         paymentTransactionRepository.save(transaction);
 
         // 8. Collection ledger
-        Employee employee = resolveEmployee(request.getReceivedByEmployeeId());
-        Integer ledgerEmployeeId = employee != null
-                ? employee.getEmployeeId() : request.getReceivedByEmployeeId();
         Integer ledgerBranchId = employee != null ? employee.getBranchId() : null;
 
         CollectionLedger ledger = CollectionLedger.builder()
                 .employeeId(ledgerEmployeeId)
                 .branchId(ledgerBranchId)
-                .businessDate(request.getPaidAt().toLocalDate())
+                .businessDate(businessDate)
                 .paymentId(payment.getPaymentId())
                 .transactionId(transaction.getTransactionId())
                 .paymentMethod(paymentMethod)
@@ -238,7 +266,8 @@ public class RepaymentServiceImpl implements RepaymentService {
 
     private Employee resolveEmployee(Integer receivedByEmployeeId) {
         if (receivedByEmployeeId != null) {
-            return employeeRepository.findById(receivedByEmployeeId).orElse(null);
+            return employeeRepository.findById(receivedByEmployeeId)
+                    .orElseThrow(() -> new AppException(ErrorCode.EMPLOYEE_NOT_FOUND));
         }
         return employeeRepository.findByUserId(getCurrentUserId()).orElse(null);
     }

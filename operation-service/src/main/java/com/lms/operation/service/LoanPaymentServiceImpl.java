@@ -60,13 +60,15 @@ public class LoanPaymentServiceImpl implements LoanPaymentService {
         LocalDateTime now = LocalDateTime.now();
         BigDecimal amount = request.getAmount();
 
-        // Update payment
-        payment.setAmountPaid(amount);
+        // Update payment. Partial payments add up; Paid once amount due + penalty + late fee is covered.
+        BigDecimal paidSoFar = nz(payment.getAmountPaid()).add(amount);
+        BigDecimal totalOwed = nz(payment.getAmountDue())
+                .add(nz(payment.getPenaltyAmount()))
+                .add(nz(payment.getLateFee()));
+        payment.setAmountPaid(paidSoFar);
         payment.setPaymentDate(now);
         payment.setPaidBy("Cashier");
-        payment.setPaymentStatus(
-                amount.compareTo(payment.getAmountDue()) >= 0 ? "Paid" : "Partial"
-        );
+        payment.setPaymentStatus(paidSoFar.compareTo(totalOwed) >= 0 ? "Paid" : "Partial");
         loanPaymentRepository.save(payment);
 
         // Update loan outstanding balance
@@ -96,6 +98,10 @@ public class LoanPaymentServiceImpl implements LoanPaymentService {
         loanRepository.save(loan);
 
         return toResponse(payment);
+    }
+
+    private BigDecimal nz(BigDecimal value) {
+        return value == null ? BigDecimal.ZERO : value;
     }
 
     private LoanPaymentResponse toResponse(LoanPayment p) {

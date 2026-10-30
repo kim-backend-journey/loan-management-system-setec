@@ -24,7 +24,7 @@ public class RepaymentRequest {
     @Positive(message = "Total amount must be positive")
     private BigDecimal totalAmount;
 
-    private String currency = "KHR";
+    private String currency = "USD";
 
     private Integer bankAccountId;
 

@@ -17,5 +17,8 @@ public record LoanResponse(
         LocalDate startDate,
         LocalDate endDate,
         LocalDateTime createdAt,
-        LocalDateTime updatedAt
+        LocalDateTime updatedAt,
+        Integer employeeId,
+        Integer branchId,
+        String currency
 ) {}

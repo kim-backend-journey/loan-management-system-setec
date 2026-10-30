@@ -2,6 +2,7 @@ package com.lms.auth.exception;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -41,6 +42,18 @@ public class GlobalExceptionHandler {
                 .body(ErrorResponse.of(
                         ErrorCode.VALIDATION_FAILED.getCode(),
                         reasons
+                ));
+    }
+
+    // @PreAuthorize role check failed. Without this the catch-all below turns it into a 500.
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ErrorResponse> handleAccessDenied(AccessDeniedException ex) {
+        log.warn("Access denied: {}", ex.getMessage());
+        return ResponseEntity
+                .status(ErrorCode.ACCESS_DENIED.getHttpStatus())
+                .body(ErrorResponse.of(
+                        ErrorCode.ACCESS_DENIED.getCode(),
+                        ErrorCode.ACCESS_DENIED.getDefaultReason()
                 ));
     }
 

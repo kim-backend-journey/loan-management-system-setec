@@ -26,6 +26,8 @@ public record LoanScheduleItemResponse(
         BigDecimal totalPaidAmount,
         BigDecimal totalRemainingAmount,
         double progressPercentage,
-        String status
+        String status,
+        // the application this loan was disbursed from; null for loans created from a loan request
+        Integer applicationId
 ) {
 }

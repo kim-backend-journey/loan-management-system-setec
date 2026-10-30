@@ -21,6 +21,8 @@ public class SwaggerConfig {
                         .title("LMS Auth Service")
                         .version("1.0")
                         .description("Loan Management System — Authentication API"))
+                // first = default in Swagger UI: the host that served this page (local gateway or production)
+                .addServersItem(new Server().url("/").description("This server"))
                 .addServersItem(new Server().url("https://loan.cavkim.tech").description("Production"))
                 .addServersItem(new Server().url("http://localhost:8080").description("Gateway"))
                 .addServersItem(new Server().url("http://localhost:8081").description("Direct (auth-service)"))

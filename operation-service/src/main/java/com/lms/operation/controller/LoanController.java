@@ -1,6 +1,7 @@
 package com.lms.operation.controller;
 
 import com.lms.common.response.ApiResponse;
+import com.lms.operation.dto.request.DisburseApplicationRequest;
 import com.lms.operation.dto.response.LoanResponse;
 import com.lms.operation.service.LoanService;
 import lombok.RequiredArgsConstructor;
@@ -16,9 +17,12 @@ public class LoanController {
 
     @PostMapping("/api/v1/applications/{id}/disburse")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<LoanResponse>> disburse(@PathVariable Integer id) {
+    public ResponseEntity<ApiResponse<LoanResponse>> disburse(
+            @PathVariable Integer id,
+            @RequestBody(required = false) DisburseApplicationRequest request) {
+        Integer employeeId = request == null ? null : request.getEmployeeId();
         return ResponseEntity.ok(
-                ApiResponse.success(loanService.disburse(id), "Loan disbursed successfully"));
+                ApiResponse.success(loanService.disburse(id, employeeId), "Loan disbursed successfully"));
     }
 
     @GetMapping("/api/v1/loans/{id}")

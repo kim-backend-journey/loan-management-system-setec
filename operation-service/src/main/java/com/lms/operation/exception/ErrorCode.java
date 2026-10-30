@@ -44,6 +44,10 @@ public enum ErrorCode {
     // Employee
     EMPLOYEE_NOT_FOUND("EMPLOYEE_NOT_FOUND", "Employee not found", HttpStatus.NOT_FOUND),
 
+    // Close Day
+    DAY_ALREADY_CLOSED("DAY_ALREADY_CLOSED", "Business day is already closed for this employee", HttpStatus.CONFLICT),
+    DAY_CLOSING_NOT_FOUND("DAY_CLOSING_NOT_FOUND", "Business day has not been closed", HttpStatus.NOT_FOUND),
+
     // Disbursement / Idempotency
     BANK_REFERENCE_DUPLICATE("BANK_REFERENCE_DUPLICATE", "Bank reference already exists", HttpStatus.CONFLICT),
     IDEMPOTENCY_KEY_DUPLICATE("IDEMPOTENCY_KEY_DUPLICATE", "Duplicate request", HttpStatus.CONFLICT),

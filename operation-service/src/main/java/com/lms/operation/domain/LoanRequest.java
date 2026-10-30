@@ -44,7 +44,7 @@ public class LoanRequest {
 
     @Column(name = "currency", length = 10)
     @Builder.Default
-    private String currency = "KHR";
+    private String currency = "USD";
 
     @Column(name = "duration")
     private Integer duration;

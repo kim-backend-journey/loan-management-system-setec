@@ -10,6 +10,12 @@ spring:
     username: ${POSTGRES_USER:postgres}
     password: ${POSTGRES_PASSWORD:postgres123}
 
+  # Brings an existing database up to the current schema on every start (statements are re-runnable)
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:db/upgrade.sql
+
   jpa:
     hibernate:
       ddl-auto: none

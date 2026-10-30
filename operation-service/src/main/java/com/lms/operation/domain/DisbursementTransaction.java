@@ -45,7 +45,7 @@ public class DisbursementTransaction {
 
     @Column(name = "currency", length = 10)
     @Builder.Default
-    private String currency = "KHR";
+    private String currency = "USD";
 
     @Column(name = "notes", columnDefinition = "TEXT")
     private String notes;

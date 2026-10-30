@@ -33,7 +33,9 @@ public class CustomerServiceImpl implements CustomerService {
             throw new AppException(ErrorCode.CUSTOMER_ALREADY_EXISTS,
                     "National ID already registered");
         }
-        if (customerRepository.existsByEmail(request.getEmail())) {
+        // email is optional; existsByEmail(null) would match every customer without one
+        if (request.getEmail() != null && !request.getEmail().isBlank()
+                && customerRepository.existsByEmail(request.getEmail())) {
             throw new AppException(ErrorCode.CUSTOMER_ALREADY_EXISTS,
                     "Email already registered");
         }

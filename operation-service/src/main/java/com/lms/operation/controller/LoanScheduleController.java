@@ -2,6 +2,7 @@ package com.lms.operation.controller;
 
 import com.lms.common.response.ApiResponse;
 import com.lms.operation.dto.response.LoanScheduleDetailResponse;
+import com.lms.operation.dto.response.PaginatedDueInstallmentResponse;
 import com.lms.operation.dto.response.PaginatedLoanScheduleResponse;
 import com.lms.operation.service.LoanScheduleService;
 import lombok.RequiredArgsConstructor;
@@ -39,6 +40,27 @@ public class LoanScheduleController {
                 status, fromDate, toDate, employeeId, branchId, search, page, size);
 
         return ResponseEntity.ok(response);
+    }
+
+    // Same raw page shape as the list above: { items, page, size, totalItems, totalPages }.
+    @GetMapping("/due-today")
+    @PreAuthorize("hasAnyRole('OFFICER','ADMIN')")
+    public ResponseEntity<PaginatedDueInstallmentResponse> getDueToday(
+            @RequestParam(required = false) Integer employeeId,
+            @RequestParam(defaultValue = "1") Integer page,
+            @RequestParam(defaultValue = "20") Integer size) {
+
+        return ResponseEntity.ok(loanScheduleService.getDueToday(employeeId, page, size));
+    }
+
+    @GetMapping("/overdue")
+    @PreAuthorize("hasAnyRole('OFFICER','ADMIN')")
+    public ResponseEntity<PaginatedDueInstallmentResponse> getOverdue(
+            @RequestParam(required = false) Integer employeeId,
+            @RequestParam(defaultValue = "1") Integer page,
+            @RequestParam(defaultValue = "20") Integer size) {
+
+        return ResponseEntity.ok(loanScheduleService.getOverdue(employeeId, page, size));
     }
 
     @GetMapping("/{loanId}")

@@ -14,7 +14,7 @@ spring:
         - id: operation-service
           uri: http://localhost:8082
           predicates:
-            - Path=/api/v1/customers/**,/api/v1/applications/**,/api/v1/loans/**,/api/v1/loan-products/**,/api/v1/loan-schedules/**,/api/v1/notifications/**
+            - Path=/api/v1/customers/**,/api/v1/applications/**,/api/v1/loans/**,/api/v1/loan-products/**,/api/v1/loan-schedules/**,/api/v1/notifications/**,/api/v1/loan-requests/**,/api/v1/repayments/**,/api/v1/collections/**,/api/v1/employees/**
         - id: report-service
           uri: http://localhost:8083
           predicates:

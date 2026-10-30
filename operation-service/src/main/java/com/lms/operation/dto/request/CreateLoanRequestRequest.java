@@ -24,7 +24,7 @@ public class CreateLoanRequestRequest {
     @Positive(message = "Principal amount must be positive")
     private BigDecimal principalAmount;
 
-    private String currency = "KHR";
+    private String currency = "USD";
 
     @NotNull(message = "Duration is required")
     @Positive(message = "Duration must be positive")

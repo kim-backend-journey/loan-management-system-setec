@@ -1,11 +1,13 @@
 package com.lms.operation.service;
 
+import com.lms.operation.domain.ApplicationStatusHistory;
 import com.lms.operation.domain.LoanApplication;
 import com.lms.operation.domain.LoanApproval;
 import com.lms.operation.dto.request.LoanApprovalRequest;
 import com.lms.operation.dto.response.LoanApprovalResponse;
 import com.lms.operation.exception.AppException;
 import com.lms.operation.exception.ErrorCode;
+import com.lms.operation.repository.ApplicationStatusHistoryRepository;
 import com.lms.operation.repository.LoanApplicationRepository;
 import com.lms.operation.repository.LoanApprovalRepository;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +25,7 @@ public class LoanApprovalServiceImpl implements LoanApprovalService {
 
     private final LoanApprovalRepository loanApprovalRepository;
     private final LoanApplicationRepository loanApplicationRepository;
+    private final ApplicationStatusHistoryRepository statusHistoryRepository;
 
     @Override
     @Transactional
@@ -40,10 +43,23 @@ public class LoanApprovalServiceImpl implements LoanApprovalService {
         approval.setApprovedAt(now);
         approval = loanApprovalRepository.save(approval);
 
+        String oldStatus = application.getApplicationStatus();
+        String newStatus = null;
         if ("Approved".equalsIgnoreCase(request.getApprovalStatus())) {
-            application.setApplicationStatus("Approved");
+            newStatus = "Approved";
         } else if ("Rejected".equalsIgnoreCase(request.getApprovalStatus())) {
-            application.setApplicationStatus("Rejected");
+            newStatus = "Rejected";
+        }
+        if (newStatus != null) {
+            application.setApplicationStatus(newStatus);
+            // the decision shows in GET /applications/{id}/history next to submit and status changes
+            statusHistoryRepository.save(ApplicationStatusHistory.builder()
+                    .application(application)
+                    .changedBy(approval.getApprovedBy())
+                    .oldStatus(oldStatus)
+                    .newStatus(newStatus)
+                    .remark(request.getDecisionReason())
+                    .build());
         }
         loanApplicationRepository.save(application);
 
