@@ -149,6 +149,14 @@ public class LoanServiceImpl implements LoanService {
         return toResponse(loan);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public LoanResponse getLoanByApplication(Integer applicationId) {
+        Loan loan = loanRepository.findByApplication_ApplicationId(applicationId)
+                .orElseThrow(() -> new AppException(ErrorCode.LOAN_NOT_FOUND));
+        return toResponse(loan);
+    }
+
     private LoanResponse toResponse(Loan l) {
         return new LoanResponse(
                 l.getLoanId(),

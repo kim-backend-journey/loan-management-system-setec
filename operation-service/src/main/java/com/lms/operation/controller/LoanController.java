@@ -25,6 +25,14 @@ public class LoanController {
                 ApiResponse.success(loanService.disburse(id, employeeId), "Loan disbursed successfully"));
     }
 
+    // The loan an application was disbursed as; 404 LOAN_NOT_FOUND until it is disbursed
+    @GetMapping("/api/v1/applications/{id}/loan")
+    @PreAuthorize("hasAnyRole('OFFICER','ADMIN')")
+    public ResponseEntity<ApiResponse<LoanResponse>> getByApplication(@PathVariable Integer id) {
+        return ResponseEntity.ok(
+                ApiResponse.success(loanService.getLoanByApplication(id), "Loan retrieved"));
+    }
+
     @GetMapping("/api/v1/loans/{id}")
     @PreAuthorize("hasAnyRole('OFFICER','ADMIN')")
     public ResponseEntity<ApiResponse<LoanResponse>> get(@PathVariable Integer id) {
