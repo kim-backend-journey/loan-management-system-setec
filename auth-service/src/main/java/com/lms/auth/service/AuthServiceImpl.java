@@ -120,8 +120,9 @@ public class AuthServiceImpl implements AuthService {
                 });
     }
 
+    // Each sign-in gets its own refresh token, so signing in on another device or tab does not end
+    // the sessions already open there; logout revokes only the token it is given.
     private String generateAndSaveRefreshToken(User user) {
-        refreshTokenRepository.revokeAllUserTokens(user);
         String tokenValue = UUID.randomUUID().toString();
         RefreshToken token = RefreshToken.builder()
                 .user(user)
